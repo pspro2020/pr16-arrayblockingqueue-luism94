@@ -5,50 +5,44 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-	
-	private static final int LIMITE_BANDEJA = 20;
-	private static final int MAX_HILOS = 3;
-	private static final int MAX_SEGUNDOS = 60;
-	private static DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("HH:mm:ss"); //Static?
-	
 
 	public static void main(String[] args) {
-		//Objeto cerrojo comun a los hilos
-		Bandeja bandeja_sucios = new Bandeja();
-		Bandeja bandeja_fregados = new Bandeja();
-		Bandeja bandeja_secos = new Bandeja();
-		Bandeja bandeja_alacena = new Bandeja();
+		//Objetos bandeja platos para los hilos
+		Tray dirtyDishesTray = new Tray();
+		Tray washedDishesTray = new Tray();
+		Tray driedDishesTray = new Tray();
+		Tray finishedDishesTray = new Tray();
 
 		//Hilos secundarios declarados con nombre
-		Thread fregador = new Thread(new Fregador(bandeja_sucios, bandeja_fregados), "Fregador");
-		Thread secador = new Thread(new Secador(bandeja_fregados, bandeja_secos), "Secador");
-		Thread organizador = new Thread(new Organizador(bandeja_secos, bandeja_alacena), "Organizador");
+		Thread washer = new Thread(new Washer(dirtyDishesTray, washedDishesTray), "Cleaner");
+		Thread dryer = new Thread(new Dryer(washedDishesTray, driedDishesTray), "Dryer");
+		Thread organizer = new Thread(new Organizer(driedDishesTray, finishedDishesTray), "Organizer");
 		//Array de hilos secundarios
-		Thread[] trabajadores = {fregador, secador, organizador};
+		Thread[] workers = {washer, dryer, organizer};
 		
 		try {
-			for (int i = 0; i < LIMITE_BANDEJA; i++) {
-				bandeja_sucios.colocarPlato(new Plato(i + 1));
+			for (int i = 0; i < Constants.DISH_LIMIT; i++) {
+				dirtyDishesTray.placeDish(new Dish(i + 1));
 			}
 			
 			//Se inician los hilos
-			for (int i = 0; i < MAX_HILOS; i++) {
-				trabajadores[i].start();
+			for (int i = 0; i < Constants.THREAD_LIMIT; i++) {
+				workers[i].start();
 			}
 			
 			//Hilo principal espera 60 segundos antes de interrumpir los hilos secundarios
-			TimeUnit.SECONDS.sleep(MAX_SEGUNDOS);
+			TimeUnit.SECONDS.sleep(Constants.MAX_TIME_SECONDS);
 			
-			for (int i = 0; i < MAX_HILOS; i++) {
-				trabajadores[i].interrupt();
+			for (int i = 0; i < Constants.THREAD_LIMIT; i++) {
+				workers[i].interrupt();
 			}
 			//Se muestra por pantalla el mensaje CUMPLEAÑOS FELIZ
-			System.out.printf("Hora %s: --Todos: CUMPLEAÑOS FELIZ!!\n", LocalDateTime.now().format(formatoHora).toString());
+			System.out.println(String.format(Constants.MAIN_PROGRAM_END, LocalDateTime.now().format(Constants.TIME_FORMATTER).toString()));
 
 		
 		} catch (InterruptedException e) {
 			//Si por si algo interrumpe el hilo principal, se muestra un mensaje por pantalla
-			System.out.println("ERROR -- CUMPLEAÑERO INTERRUMPIDO");
+			System.out.println(String.format(Constants.MAIN_INTERRUPTED, LocalDateTime.now().format(Constants.TIME_FORMATTER)));
 			e.printStackTrace();
 		}
 	}

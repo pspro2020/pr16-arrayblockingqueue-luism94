@@ -2,22 +2,21 @@ package codes;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class Bandeja {
-
-	private static final int LIMITE_BANDEJA = 20;
+public class Tray {
 
 	//Lista de tipo Plato que representan las bandejas de platos
-	private final ArrayBlockingQueue<Plato> bandeja = new ArrayBlockingQueue<Plato>(LIMITE_BANDEJA);
+	private final ArrayBlockingQueue<Dish> dish_pile = new ArrayBlockingQueue<Dish>(Constants.DISH_LIMIT);
 
-	public void colocarPlato(Plato plato) throws InterruptedException {
-		bandeja.put(plato);
+	public void placeDish(Dish plato) throws InterruptedException {
+		//Metodo con seguridad para recoger un plato de la bandeja consciente de la concurrencia de los hilos
+		dish_pile.put(plato);
 		//System.out.println(String.format("Plato %d colocado en la bandeja", plato.getNumSerie()));
 	}
 	
-	public Plato recogerPlato() throws InterruptedException {
+	public Dish pickUpDish() throws InterruptedException {
 		//Metodo con seguridad para recoger un plato de la bandeja consciente de la concurrencia de los hilos
-		Plato plato = bandeja.take();
+		Dish dish = dish_pile.take();
 		//System.out.println(String.format("Plato %d recogido de la bandeja", plato.getNumSerie()));
-		return plato;
+		return dish;
 	}
 }
